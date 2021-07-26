@@ -1,0 +1,15 @@
+{
+  "name": "web-simplex-express",
+  "version": "0.0.0",
+  "scripts": {
+    "start": "node app.js",
+    "start-dev": "nodemon app.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "~4.16.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.12"
+  }
+}
