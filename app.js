@@ -58,8 +58,7 @@ app.post('/exercise', (req, res) => {
                                target_vars,
                                constraint_vars,
                                constraint_vals)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        RETURNING *
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
     `
 
     pool.query(createSql, sqlParams, (error, result) => {
@@ -78,7 +77,25 @@ app.post('/exercise', (req, res) => {
 app.get('/exercises', (req, res) => {
     console.log(`${req.method} ${req.url}`)
 
-    res.status(200).send('READ')
+    const readSql = `
+        SELECT title,
+               difficulty,
+               task,
+               number_of_vars,
+               number_of_constraints,
+               target_vars,
+               constraint_vars,
+               constraint_vals
+        FROM exercises
+    `
+
+    pool.query(readSql, (error, result) => {
+        if (error) {
+            throw error
+        }
+
+        res.status(200).json(result.rows)
+    })
 })
 
 //
