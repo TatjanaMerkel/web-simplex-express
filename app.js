@@ -3,6 +3,10 @@ const cors = require('cors')
 const express = require('express')
 const pg = require('pg')
 
+async function main() {
+
+}
+
 const app = express()
 const port = process.env.PORT || 3000
 
@@ -20,7 +24,7 @@ app.get('/', (req, res) => {
 })
 
 //
-// DATABASE SETUP
+// Create database connection
 //
 
 const pool = new pg.Pool({
@@ -32,7 +36,69 @@ const pool = new pg.Pool({
 })
 
 //
-// CREATE
+// Init and seed database
+//
+
+async function initDatabase() {
+    const createTypeSql = `
+        DO $$ BEGIN
+            CREATE TYPE difficulty AS ENUM ('easy', 'medium', 'hard');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$
+    `
+
+    await pool.query(createTypeSql)
+
+    const createTableSql = `
+        CREATE TABLE IF NOT EXISTS exercises
+        (
+            id
+            SERIAL,
+
+            title
+            VARCHAR,
+
+            difficulty
+            difficulty,
+
+            task
+            VARCHAR,
+
+            number_of_vars
+            INT,
+            number_of_constraints
+            INT,
+
+            target_vars
+            VARCHAR, -- Fraction[] as JSON
+            constraint_vars
+            VARCHAR, -- Fraction[][] as JSON
+            constraint_vals
+            VARCHAR  -- Fraction[] as JSON
+        )
+    `
+
+    await pool.query(createTableSql)
+
+    const seedSql = `
+        INSERT INTO exercises (title, difficulty, task, number_of_vars, number_of_constraints, target_vars,
+                               constraint_vars, constraint_vals)
+        VALUES ('Ex 1', 'easy', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+                'constraint vals...'),
+               ('Ex 2', 'medium', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+                'constraint vals...'),
+               ('Ex 3', 'hard', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+                'constraint vals...')
+    `
+
+    await pool.query(seedSql)
+}
+
+initDatabase().catch(error => console.error(error))
+
+//
+// POST /exercise
 //
 
 app.post('/exercise', (req, res) => {
@@ -49,7 +115,7 @@ app.post('/exercise', (req, res) => {
         JSON.stringify(JSON.parse(req.body.constraintVals))
     ]
 
-    const createSql = `
+    const insertSql = `
         INSERT INTO exercises (title,
                                difficulty,
                                task,
@@ -62,7 +128,7 @@ app.post('/exercise', (req, res) => {
 
     `
 
-    pool.query(createSql, sqlParams, (error, result) => {
+    pool.query(insertSql, sqlParams, (error, result) => {
         if (error) {
             throw error
         }
@@ -72,13 +138,13 @@ app.post('/exercise', (req, res) => {
 })
 
 //
-// READ
+// GET /exercises
 //
 
 app.get('/exercises', (req, res) => {
     console.log(`${req.method} ${req.url}`)
 
-    const readSql = `
+    const selectSql = `
         SELECT title,
                difficulty,
                task,
@@ -90,7 +156,7 @@ app.get('/exercises', (req, res) => {
         FROM exercises
     `
 
-    pool.query(readSql, (error, result) => {
+    pool.query(selectSql, (error, result) => {
         if (error) {
             throw error
         }
@@ -100,7 +166,7 @@ app.get('/exercises', (req, res) => {
 })
 
 //
-// UPDATE
+// PUT /exercise/:exercise_id
 //
 
 app.put('/exercise/:exercise_id', (req, res) => {
@@ -144,7 +210,7 @@ app.put('/exercise/:exercise_id', (req, res) => {
 })
 
 //
-// DELETE
+// DELETE /exercise/:exercise_id
 //
 
 app.delete('/exercise/:exercise_id', (req, res) => {
@@ -173,7 +239,7 @@ app.delete('/exercise/:exercise_id', (req, res) => {
 })
 
 //
-// START SERVER
+// Start server
 //
 
 app.listen(port, () => {
