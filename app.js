@@ -150,7 +150,26 @@ app.put('/exercise/:exercise_id', (req, res) => {
 app.delete('/exercise/:exercise_id', (req, res) => {
     console.log(`${req.method} ${req.url}`)
 
-    res.status(200).send('DELETE')
+    const exercise_id = parseInt(req.params.exercise_id)
+
+    const sqlParams = [
+        exercise_id
+    ]
+
+    const deleteSql = `
+        DELETE
+        FROM exercises
+        WHERE id = $1 RETURNING *
+    `
+
+    pool.query(deleteSql, sqlParams, (error, result) => {
+        if (error) {
+            throw error
+        }
+
+        res.status(200).json(result.rows[0])
+    })
+
 })
 
 //
