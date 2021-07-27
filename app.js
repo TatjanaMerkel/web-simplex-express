@@ -59,6 +59,7 @@ app.post('/exercise', (req, res) => {
                                constraint_vars,
                                constraint_vals)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+
     `
 
     pool.query(createSql, sqlParams, (error, result) => {
@@ -105,7 +106,41 @@ app.get('/exercises', (req, res) => {
 app.put('/exercise/:exercise_id', (req, res) => {
     console.log(`${req.method} ${req.url}`)
 
-    res.status(200).send('UPDATE')
+    const exercise_id = parseInt(req.params.exercise_id)
+
+    const sqlParams = [
+        exercise_id,
+        req.body.title,
+        req.body.difficulty,
+        req.body.task,
+        parseInt(req.body.numberOfVars),
+        parseInt(req.body.numberOfConstraints),
+        JSON.stringify(JSON.parse(req.body.targetVars)),
+        JSON.stringify(JSON.parse(req.body.constraintVars)),
+        JSON.stringify(JSON.parse(req.body.constraintVals))
+    ]
+
+    const updateSql = `
+        UPDATE exercises
+        SET title                 = $2,
+            difficulty            = $3,
+            task                  = $4,
+            number_of_vars        = $5,
+            number_of_constraints = $6,
+            target_vars           = $7,
+            constraint_vars       = $8,
+            constraint_vals       = $9
+        WHERE id = $1 RETURNING *
+    `
+
+    pool.query(updateSql, sqlParams, (error, result) => {
+        if (error) {
+            throw error
+        }
+
+        res.status(200).json(result.rows[0])
+    })
+
 })
 
 //
