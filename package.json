@@ -1,9 +1,11 @@
 {
   "name": "web-simplex-express",
-  "version": "0.0.0",
+  "description": "Backend for the web-simplex app",
+  "version": "0.1.0",
+  "main": "index.js",
   "scripts": {
-    "start": "node app.js",
-    "start-dev": "nodemon app.js"
+    "build": "npx tsc",
+    "start": "node dist/app.js"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
@@ -12,6 +14,11 @@
     "pg": "^8.6.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.12"
+    "@types/body-parser": "^1.19.1",
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
+    "@types/node": "^16.4.12",
+    "@types/pg": "^8.6.1",
+    "typescript": "^4.3.5"
   }
 }
