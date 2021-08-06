@@ -141,7 +141,8 @@ app.get('/exercises', (req, res) => {
     console.log(`${req.method} ${req.url}`)
 
     const selectSql = `
-        SELECT title,
+        SELECT id,
+               title,
                difficulty,
                task,
                number_of_vars,
