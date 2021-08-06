@@ -3,10 +3,6 @@ const cors = require('cors')
 const express = require('express')
 const pg = require('pg')
 
-async function main() {
-
-}
-
 const app = express()
 const port = process.env.PORT || 3000
 
@@ -42,7 +38,7 @@ const pool = new pg.Pool({
 async function initDatabase() {
     const createTypeSql = `
         DO $$ BEGIN
-            CREATE TYPE difficulty AS ENUM ('easy', 'medium', 'hard');
+            CREATE TYPE difficulty AS ENUM ('EASY', 'MEDIUM', 'HARD');
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$
@@ -84,11 +80,11 @@ async function initDatabase() {
     const seedSql = `
         INSERT INTO exercises (title, difficulty, task, number_of_vars, number_of_constraints, target_vars,
                                constraint_vars, constraint_vals)
-        VALUES ('Ex 1', 'easy', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+        VALUES ('Ex 1', 'EASY', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
                 'constraint vals...'),
-               ('Ex 2', 'medium', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+               ('Ex 2', 'MEDIUM', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
                 'constraint vals...'),
-               ('Ex 3', 'hard', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
+               ('Ex 3', 'HARD', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
                 'constraint vals...')
     `
 
