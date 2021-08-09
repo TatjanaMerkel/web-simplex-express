@@ -1,7 +1,8 @@
-const bodyParser = require('body-parser')
-const cors = require('cors')
-const express = require('express')
-const pg = require('pg')
+import bodyParser from 'body-parser'
+import cors from 'cors'
+import express from 'express'
+import {Pool, QueryResult} from 'pg'
+import {Request, Response} from 'express'
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -15,19 +16,19 @@ app.use(
 
 app.use(cors())
 
-app.get('/', (req, res) => {
-    res.send('Working')
+app.get('/', (req: Request, res: Response) => {
+    res.send('Hello Taejbi Baby')
 })
 
 //
 // Create database connection
 //
 
-const pool = new pg.Pool({
+const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'web_simplex_db',
-    password: '1234',
+    password: 'LD_j2bBF9Y',
     port: 5432,
 })
 
@@ -94,6 +95,71 @@ async function initDatabase() {
 initDatabase().catch(error => console.error(error))
 
 //
+// GET /exercises
+//
+
+app.get('/exercises', (req, res) => {
+    console.log(`${req.method} ${req.url}`)
+
+    const selectSql = `
+        SELECT id,
+               title,
+               difficulty,
+               task,
+               number_of_vars,
+               number_of_constraints,
+               target_vars,
+               constraint_vars,
+               constraint_vals
+        FROM exercises
+    `
+
+    pool.query(selectSql, (error: Error, result: QueryResult) => {
+        if (error) {
+            throw error
+        }
+
+        res.status(200).json(result.rows)
+    })
+})
+
+//
+// GET /exercise/:exercise_id
+//
+
+app.get('/exercise/:exercise_id', (req, res) => {
+    console.log(`${req.method} ${req.url}`)
+
+    const exercise_id = parseInt(req.params.exercise_id)
+
+    const sqlParams = [
+        exercise_id
+    ]
+
+    const selectSql = `
+        SELECT id,
+               title,
+               difficulty,
+               task,
+               number_of_vars,
+               number_of_constraints,
+               target_vars,
+               constraint_vars,
+               constraint_vals
+        FROM exercises
+        WHERE id = $1
+    `
+
+    pool.query(selectSql, sqlParams, (error: Error, result: QueryResult) => {
+        if (error) {
+            throw error
+        }
+
+        res.status(200).json(result.rows[0])
+    })
+})
+
+//
 // POST /exercise
 //
 
@@ -120,45 +186,16 @@ app.post('/exercise', (req, res) => {
                                target_vars,
                                constraint_vars,
                                constraint_vals)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
-
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        RETURNING *
     `
 
-    pool.query(insertSql, sqlParams, (error, result) => {
+    pool.query(insertSql, sqlParams, (error: Error, result: QueryResult) => {
         if (error) {
             throw error
         }
 
         res.status(201).json(result.rows[0])
-    })
-})
-
-//
-// GET /exercises
-//
-
-app.get('/exercises', (req, res) => {
-    console.log(`${req.method} ${req.url}`)
-
-    const selectSql = `
-        SELECT id,
-               title,
-               difficulty,
-               task,
-               number_of_vars,
-               number_of_constraints,
-               target_vars,
-               constraint_vars,
-               constraint_vals
-        FROM exercises
-    `
-
-    pool.query(selectSql, (error, result) => {
-        if (error) {
-            throw error
-        }
-
-        res.status(200).json(result.rows)
     })
 })
 
@@ -193,17 +230,17 @@ app.put('/exercise/:exercise_id', (req, res) => {
             target_vars           = $7,
             constraint_vars       = $8,
             constraint_vals       = $9
-        WHERE id = $1 RETURNING *
+        WHERE id = $1 
+        RETURNING *
     `
 
-    pool.query(updateSql, sqlParams, (error, result) => {
+    pool.query(updateSql, sqlParams, (error: Error, result: QueryResult) => {
         if (error) {
             throw error
         }
 
         res.status(200).json(result.rows[0])
     })
-
 })
 
 //
@@ -225,14 +262,13 @@ app.delete('/exercise/:exercise_id', (req, res) => {
         WHERE id = $1 RETURNING *
     `
 
-    pool.query(deleteSql, sqlParams, (error, result) => {
+    pool.query(deleteSql, sqlParams, (error: Error, result: QueryResult) => {
         if (error) {
             throw error
         }
 
         res.status(200).json(result.rows[0])
     })
-
 })
 
 //
