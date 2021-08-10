@@ -1,8 +1,9 @@
-import bodyParser from 'body-parser'
-import cors from 'cors'
-import express from 'express'
-import {Pool, QueryResult} from 'pg'
-import {Request, Response} from 'express'
+const bodyParser = require('body-parser')
+const cors = require('cors')
+const express = require('express')
+const math = require('mathjs')
+const pg = require('pg')
+
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -16,7 +17,7 @@ app.use(
 
 app.use(cors())
 
-app.get('/', (req: Request, res: Response) => {
+app.get('/', (req, res) => {
     res.send('Hello Taejbi Baby')
 })
 
@@ -24,7 +25,7 @@ app.get('/', (req: Request, res: Response) => {
 // Create database connection
 //
 
-const pool = new Pool({
+const pool = new pg.Pool({
     user: 'postgres',
     host: 'localhost',
     database: 'web_simplex_db',
@@ -114,7 +115,7 @@ app.get('/exercises', (req, res) => {
         FROM exercises
     `
 
-    pool.query(selectSql, (error: Error, result: QueryResult) => {
+    pool.query(selectSql, (error, result) => {
         if (error) {
             throw error
         }
@@ -150,12 +151,26 @@ app.get('/exercise/:exercise_id', (req, res) => {
         WHERE id = $1
     `
 
-    pool.query(selectSql, sqlParams, (error: Error, result: QueryResult) => {
+    pool.query(selectSql, sqlParams, (error, result) => {
         if (error) {
             throw error
         }
 
-        res.status(200).json(result.rows[0])
+        const row = result.rows[0]
+
+        const exercise = {
+            id: row.id,
+            title: row.title,
+            difficulty: row.difficulty,
+            task: row.task,
+            numberOfVars: row.number_of_vars,
+            numberOfConstraints: row.number_of_constraints,
+            targetVars: JSON.parse(row.target_vars, math.reviver),
+            constraintVars: JSON.parse(row.constraint_vars, math.reviver),
+            constraintVals: JSON.parse(row.constraint_vals, math.reviver)
+        }
+
+        res.status(200).json(exercise)
     })
 })
 
@@ -172,9 +187,9 @@ app.post('/exercise', (req, res) => {
         req.body.task,
         parseInt(req.body.numberOfVars),
         parseInt(req.body.numberOfConstraints),
-        JSON.stringify(JSON.parse(req.body.targetVars)),
-        JSON.stringify(JSON.parse(req.body.constraintVars)),
-        JSON.stringify(JSON.parse(req.body.constraintVals))
+        JSON.stringify(JSON.parse(req.body.targetVars), math.reviver),
+        JSON.stringify(JSON.parse(req.body.constraintVars), math.reviver),
+        JSON.stringify(JSON.parse(req.body.constraintVals), math.reviver)
     ]
 
     const insertSql = `
@@ -190,7 +205,7 @@ app.post('/exercise', (req, res) => {
         RETURNING *
     `
 
-    pool.query(insertSql, sqlParams, (error: Error, result: QueryResult) => {
+    pool.query(insertSql, sqlParams, (error, result) => {
         if (error) {
             throw error
         }
@@ -234,7 +249,7 @@ app.put('/exercise/:exercise_id', (req, res) => {
         RETURNING *
     `
 
-    pool.query(updateSql, sqlParams, (error: Error, result: QueryResult) => {
+    pool.query(updateSql, sqlParams, (error, result) => {
         if (error) {
             throw error
         }
@@ -262,7 +277,7 @@ app.delete('/exercise/:exercise_id', (req, res) => {
         WHERE id = $1 RETURNING *
     `
 
-    pool.query(deleteSql, sqlParams, (error: Error, result: QueryResult) => {
+    pool.query(deleteSql, sqlParams, (error, result) => {
         if (error) {
             throw error
         }
