@@ -4,7 +4,6 @@ const express = require('express')
 const math = require('mathjs')
 const pg = require('pg')
 
-
 const app = express()
 const port = process.env.PORT || 3000
 
@@ -78,19 +77,6 @@ async function initDatabase() {
     `
 
     await pool.query(createTableSql)
-
-    const seedSql = `
-        INSERT INTO exercises (title, difficulty, task, number_of_vars, number_of_constraints, target_vars,
-                               constraint_vars, constraint_vals)
-        VALUES ('Ex 1', 'EASY', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
-                'constraint vals...'),
-               ('Ex 2', 'MEDIUM', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
-                'constraint vals...'),
-               ('Ex 3', 'HARD', 'Exercise description...', 2, 2, 'target vars...', 'constraint vars...',
-                'constraint vals...')
-    `
-
-    await pool.query(seedSql)
 }
 
 initDatabase().catch(error => console.error(error))
@@ -187,9 +173,9 @@ app.post('/exercise', (req, res) => {
         req.body.task,
         parseInt(req.body.numberOfVars),
         parseInt(req.body.numberOfConstraints),
-        JSON.stringify(JSON.parse(req.body.targetVars), math.reviver),
-        JSON.stringify(JSON.parse(req.body.constraintVars), math.reviver),
-        JSON.stringify(JSON.parse(req.body.constraintVals), math.reviver)
+        req.body.targetVars,
+        req.body.constraintVars,
+        req.body.constraintVals
     ]
 
     const insertSql = `
@@ -201,8 +187,7 @@ app.post('/exercise', (req, res) => {
                                target_vars,
                                constraint_vars,
                                constraint_vals)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
-        RETURNING *
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
     `
 
     pool.query(insertSql, sqlParams, (error, result) => {
@@ -230,9 +215,9 @@ app.put('/exercise/:exercise_id', (req, res) => {
         req.body.task,
         parseInt(req.body.numberOfVars),
         parseInt(req.body.numberOfConstraints),
-        JSON.stringify(JSON.parse(req.body.targetVars)),
-        JSON.stringify(JSON.parse(req.body.constraintVars)),
-        JSON.stringify(JSON.parse(req.body.constraintVals))
+        req.body.targetVars,
+        req.body.constraintVars,
+        req.body.constraintVals
     ]
 
     const updateSql = `
@@ -245,8 +230,7 @@ app.put('/exercise/:exercise_id', (req, res) => {
             target_vars           = $7,
             constraint_vars       = $8,
             constraint_vals       = $9
-        WHERE id = $1 
-        RETURNING *
+        WHERE id = $1 RETURNING *
     `
 
     pool.query(updateSql, sqlParams, (error, result) => {
