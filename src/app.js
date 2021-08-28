@@ -187,7 +187,8 @@ app.post('/exercise', (req, res) => {
                                target_vars,
                                constraint_vars,
                                constraint_vals)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+        RETURNING *
     `
 
     pool.query(insertSql, sqlParams, (error, result) => {
@@ -230,7 +231,8 @@ app.put('/exercise/:exercise_id', (req, res) => {
             target_vars           = $7,
             constraint_vars       = $8,
             constraint_vals       = $9
-        WHERE id = $1 RETURNING *
+        WHERE id = $1 
+        RETURNING *
     `
 
     pool.query(updateSql, sqlParams, (error, result) => {
