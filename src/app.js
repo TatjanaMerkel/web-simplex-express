@@ -17,7 +17,7 @@ app.use(
 app.use(cors())
 
 app.get('/', (req, res) => {
-    res.send('Hello Taejbi Baby')
+    res.send('Server is running')
 })
 
 //
@@ -25,11 +25,11 @@ app.get('/', (req, res) => {
 //
 
 const pool = new pg.Pool({
-    user: 'postgres',
-    host: 'localhost',
-    database: 'web_simplex_db',
-    password: 'LD_j2bBF9Y',
-    port: 5432,
+    user: process.env.DB_USER || 'postgres',
+    host: process.env.DB_HOST || 'localhost',
+    database: process.env.DB_NAME || 'web_simplex_db',
+    password: process.env.DB_PW || 'web_simplex_db',
+    port: process.env.DB_PORT || 5432,
 })
 
 //
@@ -77,6 +77,35 @@ async function initDatabase() {
     `
 
     await pool.query(createTableSql)
+
+    const seedSql = `
+        INSERT INTO exercises (title,
+                               difficulty,
+                               task,
+                               number_of_vars,
+                               number_of_constraints,
+                               target_vars,
+                               constraint_vars,
+                               constraint_vals)
+
+        SELECT 'Transportfähre',
+                'MEDIUM',
+                'Eine Fähre für LKWs und Busse hat 12 Stellplätze und kann bis zu 100 Tonnen befördern.' ||
+                ' Ein LKW benötigt einen Stellplatz, wiegt 15 Tonnen und bringt 1000€ Gewinn. Ein Bus' ||
+                ' benötigt zwei Stellplätze, wiegt 10 Tonnen und bringt 1500€ Gewinn. Insgesamt warten' ||
+                ' 8 LKWs und 8 Busse auf die Überfahrt. Wie viele LKWs und Busse sollten transportiert' ||
+                ' werden um den maximalen Gewinn zu erwirtschaften?',
+                2,
+                2,
+                '[{"mathjs":"Fraction","n":1000,"d":1},{"mathjs":"Fraction","n":1500,"d":1}]',
+                '[[{"mathjs":"Fraction","n":1,"d":1},{"mathjs":"Fraction","n":2,"d":1}],' ||
+                ' [{"mathjs":"Fraction","n":15,"d":1},{"mathjs":"Fraction","n":10,"d":1}]]',
+                '[{"mathjs":"Fraction","n":12,"d":1},{"mathjs":"Fraction","n":100,"d":1}]'
+
+        WHERE NOT EXISTS (SELECT * FROM exercises)   
+    `
+
+    await pool.query(seedSql)
 }
 
 initDatabase().catch(error => console.error(error))
