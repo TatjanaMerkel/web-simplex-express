@@ -24,13 +24,26 @@ app.get('/', (req, res) => {
 // Create database connection
 //
 
-const pool = new pg.Pool({
-    user: process.env.DB_USER || 'postgres',
-    host: process.env.DB_HOST || 'localhost',
-    database: process.env.DB_NAME || 'web_simplex_db',
-    password: process.env.DB_PW || 'web_simplex_db',
-    port: process.env.DB_PORT || 5432,
-})
+let options
+
+if (process.env.DATABASE_URL) {
+    options = {
+        connectionString: process.env.DATABASE_URL,
+        ssl: {
+            rejectUnauthorized: false
+        }
+    }
+} else {
+    options = {
+        user: process.env.DB_USER || 'postgres',
+        host: process.env.DB_HOST || 'localhost',
+        database: process.env.DB_NAME || 'web_simplex_db',
+        password: process.env.DB_PW || 'web_simplex_db',
+        port: process.env.DB_PORT || 5432,
+    }
+}
+
+const pool = new pg.Pool(options)
 
 //
 // Init and seed database
